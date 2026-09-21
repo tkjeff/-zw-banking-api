@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const prisma = require("../config/prisma");
 const { Prisma } = require("@prisma/client");
+const { createAuditLog } = require("./auditService");
 
 const generateReference = () => {
   return `TXN-${Date.now()}-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
@@ -48,6 +49,14 @@ const deposit = async (accountId, amount, description) => {
         balanceAfter: newBalance,
         accountId,
       },
+    });
+
+    await createAuditLog({
+      action: "DEPOSIT",
+      entity: "Account",
+      entityId: accountId,
+      details: `Deposit of ${depositAmount.toString()} to account ${account.accountNumber}`,
+      db: tx,
     });
 
     return {
@@ -99,6 +108,14 @@ const withdraw = async (accountId, amount, description) => {
         balanceAfter: newBalance,
         accountId,
       },
+    });
+
+    await createAuditLog({
+      action: "WITHDRAWAL",
+      entity: "Account",
+      entityId: accountId,
+      details: `Withdrawal of ${withdrawalAmount.toString()} from account ${account.accountNumber}`,
+      db: tx,
     });
 
     return {
@@ -197,6 +214,14 @@ const transfer = async (
         balanceAfter: newDestinationBalance,
         accountId: toAccountId,
       },
+    });
+
+    await createAuditLog({
+      action: "TRANSFER",
+      entity: "Account",
+      entityId: fromAccountId,
+      details: `Transfer of ${transferAmount.toString()} from account ${fromAccount.accountNumber} to account ${toAccount.accountNumber}`,
+      db: tx,
     });
 
     return {
