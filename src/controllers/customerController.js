@@ -1,16 +1,24 @@
-const prisma = require("../config/prisma");
+const {
+  createCustomer: createCustomerService,
+  getCustomers: getCustomersService,
+  getCustomerById: getCustomerByIdService,
+} = require("../services/customerService");
 
 const createCustomer = async (req, res) => {
   try {
     const { firstName, lastName, email, phone } = req.body;
 
-    const customer = await prisma.customer.create({
-      data: {
-        firstName,
-        lastName,
-        email,
-        phone,
-      },
+    if (!firstName || !lastName || !email) {
+      return res.status(400).json({
+        message: "First name, last name and email are required",
+      });
+    }
+
+    const customer = await createCustomerService({
+      firstName,
+      lastName,
+      email,
+      phone,
     });
 
     res.status(201).json({
@@ -20,6 +28,12 @@ const createCustomer = async (req, res) => {
   } catch (error) {
     console.error(error);
 
+    if (error.code === "P2002") {
+      return res.status(409).json({
+        message: "Customer email already exists",
+      });
+    }
+
     res.status(500).json({
       message: "Failed to create customer",
     });
@@ -28,11 +42,7 @@ const createCustomer = async (req, res) => {
 
 const getCustomers = async (req, res) => {
   try {
-    const customers = await prisma.customer.findMany({
-      include: {
-        accounts: true,
-      },
-    });
+    const customers = await getCustomersService();
 
     res.json(customers);
   } catch (error) {
@@ -46,14 +56,9 @@ const getCustomers = async (req, res) => {
 
 const getCustomerById = async (req, res) => {
   try {
-    const customer = await prisma.customer.findUnique({
-      where: {
-        id: Number(req.params.id),
-      },
-      include: {
-        accounts: true,
-      },
-    });
+    const customer = await getCustomerByIdService(
+      Number(req.params.id)
+    );
 
     if (!customer) {
       return res.status(404).json({

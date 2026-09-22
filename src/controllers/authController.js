@@ -6,11 +6,10 @@ const {
 const register = async (req, res) => {
   try {
     const {
-      username,
-      email,
-      password,
-      role,
-    } = req.body;
+  username,
+  email,
+  password,
+} = req.body;
 
     if (!username || !email || !password) {
       return res.status(400).json({
@@ -19,11 +18,10 @@ const register = async (req, res) => {
     }
 
     const user = await registerUser({
-      username,
-      email,
-      password,
-      role,
-    });
+  username,
+  email,
+  password,
+});
 
     res.status(201).json({
       message: "User registered successfully",
